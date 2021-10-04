@@ -95,7 +95,7 @@ class BalanceSheet(XBRL_Mapper):
             self._equity_attributable_to_noncontrolling_interest_v, mul)
         self._equity_attributable_to_parent = self.get_v(
             self._equity_attributable_to_parent_v, mul)
-        self.adjust_fields()
+        # self.adjust_fields()
 
     def adjust_fields(self):
         if self._non_current_assets == 0:
