@@ -47,8 +47,8 @@ def logistic_performance(pred, actual, classes, v=0):
 
 
 class LinearRegressionSetup:
-    def __init__(self, cik):
-        self.company = CompanyFrames(cik, True)
+    def __init__(self, ticker):
+        self.company = CompanyFrames(ticker, True)
         self.balance_sheet = self.company.balance_sheet
         self.income_statement = self.company.income_statement
         self.cash_flow = self.company.cash_flow
@@ -91,8 +91,8 @@ class LinearRegressionSetup:
 
 
 class LinearRegression(LinearRegressionSetup):
-    def __init__(self, cik):
-        super().__init__(cik)
+    def __init__(self, ticker):
+        super().__init__(ticker)
         self.regcov, self.regobs = self.regframe
 
         self.regcov = self.regcov.dropna(axis='columns')
@@ -124,3 +124,42 @@ class LinearRegression(LinearRegressionSetup):
         truePos, trueNeg, falsePos, falseNeg = logistic_performance(
             BRpred, self.y_test_d, BRfit.classes_, v)
         return truePos, trueNeg, falsePos, falseNeg
+
+
+def logistic_reg_test():
+    tickers = ['aapl', 'tsla', 'nflx',  'wmt', 'cvs']
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
+    for t in tickers:
+        print('\n')
+        print('Ticker:', t)
+        print('\n')
+        lr = LinearRegression(t)
+        truePos, trueNeg, falsePos, falseNeg = lr.binary_returns(v=1)
+        tp += truePos
+        tn += trueNeg
+        fp += falsePos
+        fn += falseNeg
+
+    print('\n')
+    print('Total:')
+    print('\n')
+    print('True Positives %:', round(tp/(tp+tn+fp+fn), 3))
+    print('True Negatives %:', round(tn/(tp+tn+fp+fn), 3))
+    print('False Positives %:', round(fp/(tp+tn+fp+fn), 3))
+    print('False Negatives %:', round(fn/(tp+tn+fp+fn), 3))
+    print('\n')
+
+
+logistic_reg_test()
+"""
+True Positives %: 0.643
+True Negatives %: 0.071
+False Positives %: 0.286
+False Negatives %: 0.0
+
+Model is severely constrined by the lack of long term data. 
+Three month data could proove to be much more useful, requiring recalibration of some functions
+"""
