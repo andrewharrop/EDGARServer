@@ -21,6 +21,11 @@ class FinancialData:
             self.yfin_quarter)
         self.adj_annual_frame = self.annual_numerical_convert(self.yfin_annual)
 
+        self.adj_quarterly_frame_delta = self.return_converter(
+            self.adj_quarterly_frame)
+        self.adj_annual_frame_delta = self.return_converter(
+            self.adj_annual_frame)
+
         # Grab the financial statements
         self.quarterly_balance_sheet, self.quarterly_income_statement, self.quarterly_cash_flow = self.periodicals(
             'quarterly')
@@ -29,19 +34,19 @@ class FinancialData:
 
         # Convert quarterlies into central frames
         self.quarterly_balance_sheet_frame = self.edgar_frame(
-            self.quarterly_balance_sheet, self.adj_quarterly_frame)
+            self.quarterly_balance_sheet, self.adj_quarterly_frame_delta)
         self.quarterly_income_statement_frame = self.edgar_frame(
-            self.quarterly_income_statement, self.adj_quarterly_frame)
+            self.quarterly_income_statement, self.adj_quarterly_frame_delta)
         self.quarterly_cash_flow_frame = self.edgar_frame(
-            self.quarterly_cash_flow, self.adj_quarterly_frame)
+            self.quarterly_cash_flow, self.adj_quarterly_frame_delta)
 
         # Convert annuals into central frames
         self.annual_balance_sheet_frame = self.edgar_frame(
-            self.annual_balance_sheet, self.adj_annual_frame)
+            self.annual_balance_sheet, self.adj_annual_frame_delta)
         self.annual_income_statement_frame = self.edgar_frame(
-            self.annual_income_statement, self.adj_annual_frame)
+            self.annual_income_statement, self.adj_annual_frame_delta)
         self.annual_cash_flow_frame = self.edgar_frame(
-            self.annual_cash_flow, self.adj_annual_frame)
+            self.annual_cash_flow, self.adj_annual_frame_delta)
 
         # Merge the frames
         self.quarterly_merge = pd.merge(
@@ -86,6 +91,11 @@ class FinancialData:
             new_frame.append([int(str(index)[:4]), row['avg']])
         return pd.DataFrame(new_frame, columns=['date', 'avg'])
 
+    def return_converter(self, frame):
+        return pd.merge(frame['date'], frame['avg'].diff().fillna(0), left_index=True, right_index=True)
+
+    def financial_deltas(self, frame):
+        return frame.diff().fillna(0)
 
 # test = FinancialData('aapl')
 # print(test.periodicals('quarterly'))

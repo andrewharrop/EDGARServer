@@ -27,7 +27,7 @@ class Company(FinancialData):
         self.quarterly_merged_df = self.quarterly_merge
         self.annual_merged_df = self.annual_merge
 
-    def logistic_regression(self):
+    def logistic_regression(self, verbose=1):
         covariate = (self.quarterly_merged_df.drop('avg', 1)).values
         response = (self.quarterly_merged_df['avg']).values
 
@@ -36,8 +36,34 @@ class Company(FinancialData):
         actual = regression.y_test
         predicted = regression.prediction
         classes = regression.model.classes_
-        regression.logistic_performance(actual, predicted, classes)
+        tp, tn, fp, fn = regression.logistic_performance(
+            actual, predicted, classes, verbose=verbose)
+
+        return tp, tn, fp, fn
 
 
-test = Company('aapl')
-test.logistic_regression()
+def logistic_regression_series(series, v=0):
+
+    total_tp = 0
+    total_tn = 0
+    total_fp = 0
+    total_fn = 0
+
+    for ticker in series:
+
+        company = Company(ticker)
+        tp, tn, fp, fn = company.logistic_regression(0)
+
+        total_tp += tp
+        total_tn += tn
+        total_fp += fp
+        total_fn += fn
+
+    print('Total TP:', total_tp)
+    print('Total TN:', total_tn)
+    print('Total FP:', total_fp)
+    print('Total FN:', total_fn)
+
+
+# tickers = ['aapl', 'amzn', 'f', 'tsla', 'aapl']
+# logistic_regression_series(tickers)

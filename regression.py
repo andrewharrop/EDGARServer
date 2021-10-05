@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 from tabulate import tabulate
 import numpy as np
 
+import warnings
+
 
 class Regression:
     def __init__(self, X, y, test_size=0.2, random_state=1):
@@ -30,7 +32,7 @@ class Regression:
         self.model.fit(self.X_train, self.y_train)
         self.prediction = self.model.predict(self.X_test)
 
-    def logistic_regression(self):
+    def logistic_regression(self,):
         self.model = LogisticRegression()
         self.y_train = [1 if x > 0 else 0 for x in self.y_train]
         self.y_test = [1 if x > 0 else 0 for x in self.y_test]
@@ -38,13 +40,15 @@ class Regression:
         self.model.fit(self.X_train, self.y_train)
         self.prediction = self.model.predict(self.X_test)
 
-    def logistic_performance(pred, actual, classes, v=0):
+    def logistic_performance(self, pred, actual, classes, verbose=0):
+        warnings.filterwarnings('ignore')
+
         tp = sum(np.logical_and(pred == classes[1], actual == classes[1]))
         tn = sum(np.logical_and(pred == classes[0], actual == classes[0]))
         fp = sum(np.logical_and(pred == classes[1], actual == classes[0]))
         fn = sum(np.logical_and(pred == classes[0], actual == classes[1]))
         nt = []
-        if v == 1:
+        if verbose == 1:
             nt.append(["True Positives", tp])
             nt.append(["True Negatives", tn])
             nt.append(["False Positives", fp])
@@ -56,14 +60,15 @@ class Regression:
         recall = tp / (tp + fn)
         sensitivity = recall
         specificity = tn / (tn + fp)
-        vt = []
-        if v == 1:
-            vt.append(["Accuracy", round(accuracy, 3)])
-            vt.append(["Precision", round(precision, 3)])
-            vt.append(["Recall", round(recall, 3)])
-            vt.append(["Sensitivity", round(sensitivity, 3)])
-            vt.append(["Specificity", round(specificity, 3)])
-            print(tabulate(vt, headers=["Type", "Value"]))
+        if verbose == 1:
+            nt.append(["-------", "-------"])
+            nt.append(["Accuracy", round(accuracy, 3)])
+            nt.append(["Precision", round(precision, 3)])
+            nt.append(["Recall", round(recall, 3)])
+            nt.append(["Sensitivity", round(sensitivity, 3)])
+            nt.append(["Specificity", round(specificity, 3)])
+            print('\n')
+            print(tabulate(nt, headers=["Type", "Count"]))
             print('\n')
 
         return tp, tn, fp, fn
