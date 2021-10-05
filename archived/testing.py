@@ -1,3 +1,5 @@
+# Depreciated for now. Reconfigure before use
+
 class CompanyTest:
     def __init__(self, tls=100):
         self.tls = int(tls*0.05)

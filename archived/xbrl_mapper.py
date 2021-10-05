@@ -5,17 +5,23 @@ import re
 
 
 class XBRL_Mapper:
-    def __init__(self, f):
+    def __init__(self, f, t=0):
         self.facts = f
+        self.t = t
 
-    def r(self, v, mul, t='FY', u='USD'):
+    def r(self, v, mul, u='USD'):
+        t = self.t
+        if t == 0:
+            t = 'FY'
+        else:
+            t = 'Q'
         if mul:
             val = {}
             v = v['units'][u]
             if len(v) == 0:
                 pass
             for i in v:
-                if i['fp'] == t:
+                if t in i['fp']:
                     if i['val'] is None:
                         val[i['fy']] = 0
                     if i['val']:
@@ -43,8 +49,8 @@ class XBRL_Mapper:
 
 
 class BalanceSheet(XBRL_Mapper):
-    def __init__(self, facts, mul):
-        super().__init__(facts)
+    def __init__(self, facts, mul, t=0):
+        super().__init__(facts, t)
         self.facts = facts
         self._assets_v = ['Assets']
         self._current_assets_v = ['AssetsCurrent']
@@ -133,8 +139,8 @@ class BalanceSheet(XBRL_Mapper):
 
 
 class IncomeStatement(XBRL_Mapper):
-    def __init__(self, facts, mul):
-        super().__init__(facts)
+    def __init__(self, facts, mul, t=0):
+        super().__init__(facts, t)
         self.facts = facts
         self._revenue_v = ['Revenues',
                            'SalesRevenueNet',
@@ -223,8 +229,8 @@ class IncomeStatement(XBRL_Mapper):
 
 
 class CashFlow(XBRL_Mapper):
-    def __init__(self, facts, mul):
-        super().__init__(facts)
+    def __init__(self, facts, mul, t=0):
+        super().__init__(facts, t)
         self.facts = facts
         self._net_cash_flow_v = [
             'CashAndCashEquivalentsPeriodIncreaseDecrease', 'CashPeriodIncreaseDecrease', 'NetCashProvidedByUsedInContinuingOperations']

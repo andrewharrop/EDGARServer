@@ -1,77 +1,43 @@
-from edgar import Company as EComp
-import json
 
-from xbrl_mapper import BalanceSheet
-from xbrl_mapper import IncomeStatement
-from xbrl_mapper import CashFlow
-
-from yfin import YCompany
-
-from ratios import Construct
-
-from testing import CompanyTest
+from data_mapper import FinancialData
+from regression import Regression
 
 
-class Company(EComp):
-    def __init__(self, cik, m=False):
-        self.t = cik
-        super().__init__(cik)
-        self._facts = self.facts()
-        self._gaap_facts = self._facts['facts']['us-gaap']
+class Company(FinancialData):
+    def __init__(self, ticker):
+        super().__init__(ticker)
+        self.ticker = ticker
 
-        self._balance_sheet = BalanceSheet(
-            self._gaap_facts, m)
-        self._income_statement = IncomeStatement(
-            self._gaap_facts, m)
-        self._cash_flow = CashFlow(
-            self._gaap_facts, m)
-        self.balance_sheet = self._balance_sheet.attrs()
-        self.income_statement = self._income_statement.attrs()
-        self.cash_flow = self._cash_flow.attrs()
+        self.annual_bs = self.annual_balance_sheet
+        self.annual_is = self.annual_income_statement
+        self.annual_cf = self.annual_cash_flow
 
-    def market_data(self):
-        c = YCompany(self.t)
-        return c.price_history(), c.market_cap()
+        self.annual_bs_df = self.annual_balance_sheet_frame
+        self.annual_is_df = self.annual_income_statement_frame
+        self.annual_cf_df = self.annual_cash_flow_frame
 
-    def parser_quality(self):
-        b = len(self.balance_sheet)
-        i = len(self.income_statement)
-        c = len(self.cash_flow)
-        bsc = [self.balance_sheet[x] for x in self.balance_sheet].count(0)
-        isc = [self.income_statement[x]
-               for x in self.income_statement].count(0)
-        cfc = [self.cash_flow[x] for x in self.cash_flow].count(0)
-        return [(bsc + isc + cfc) / (b+i+c), bsc/b, isc/i, cfc/c]
+        self.quarterly_bs = self.quarterly_balance_sheet
+        self.quarterly_is = self.quarterly_income_statement
+        self.quarterly_cf = self.quarterly_cash_flow
+
+        self.quarterly_bs_df = self.quarterly_balance_sheet_frame
+        self.quarterly_is_df = self.quarterly_income_statement_frame
+        self.quarterly_cf_df = self.quarterly_cash_flow_frame
+
+        self.quarterly_merged_df = self.quarterly_merge
+        self.annual_merged_df = self.annual_merge
+
+    def logistic_regression(self):
+        covariate = (self.quarterly_merged_df.drop('avg', 1)).values
+        response = (self.quarterly_merged_df['avg']).values
+
+        regression = Regression(covariate, response)
+        regression.logistic_regression()
+        actual = regression.y_test
+        predicted = regression.prediction
+        classes = regression.model.classes_
+        regression.logistic_performance(actual, predicted, classes)
 
 
-# Algorithmic fitting
-class CompanyFrames(Company):
-    def __init__(self, cik, m=False):
-        super().__init__(cik, m=m)
-        self.hist, self.cap = self.market_data()
-        self.fy_prices = self.fy_price_parser()
-        self.price_deltas = self.deltas()
-
-    def deltas(self):
-        yoy_delta = {}
-        s = int(min(self.fy_prices))
-        for i in range(len(self.fy_prices)-1):
-            delta = (self.fy_prices[str(s+1)] -
-                     self.fy_prices[str(s)])/self.fy_prices[str(s)]
-            s += 1
-            yoy_delta[str(s)] = delta
-        return yoy_delta
-
-    def fy_price_parser(self):
-        yrs = {}
-        n = 1
-        for _, row in self.hist.iterrows():
-            avg = row['avg']
-            yr = (str(row.name)[:4])
-            if yr in yrs:
-                n += 1
-                yrs[yr] = ((yrs[yr]*(n-1))+avg)/n
-            else:
-                n = 1
-                yrs[yr] = avg
-        return yrs
+test = Company('aapl')
+test.logistic_regression()

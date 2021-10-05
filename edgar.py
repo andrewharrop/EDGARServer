@@ -1,8 +1,8 @@
-# Wrapper for edgar api
+# Wrapper for edgar api | Optimized
 from requests import get
 from json import loads
 from json import dumps
-from exMap import CIK_map
+from CIK_mapper import CIK_map
 
 api_headers = {
     'User-Agent': 'FreeRange Data andrewhar05@gmail.com',
